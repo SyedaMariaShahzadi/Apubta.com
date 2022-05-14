@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>All Pakistan Universities BPS Teachers Assosiation</title>
+    <style>
+        ul {
+            list-style-type: none;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: #333;
+        }
+        li {
+            float: left;
+        }
+        li a {
+            display: block;
+            color: white;
+            text-align: center;
+            padding: 14px 16px;
+            text-decoration: none;
+        }
+        li a:hover {
+            background-color: #111;
+        }
+    </style>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            background: #222;
+            background-color: #FFFFFF;
+        }
+        #loading {
+            color: #fff;
+            position: absolute;
+            letter-spacing: 3px;
+            width: 10em;
+            line-height: 2em;
+            top: calc(50% - 1em);
+            left: calc(50% - 5em);
+            z-index: 2;
+            text-align: center;
+        }
+        .loading-done {
+            display: none;
+        }
+        #images {
+            position: absolute;
+            width: 600px;
+            left: calc(50% - 300px);
+        }
+        .canvas {
+            position: relative;
+            display: block;
+            overflow: hidden;
+        }
+        #images img {
+            display: none;
+            vertical-align: bottom;
+        }
+        canvas {
+            vertical-align: bottom;
+            position: absolute;
+        }
+        nav ul {
+            height: 0;
+            margin: 0;
+        }
+        nav li {
+            position: absolute;
+            width: 25px;
+            height: 25px;
+            opacity: .3;
+            list-style: none;
+            top: calc(50% - 12px);
+            z-index: 100;
+            transition: opacity .3s;
+        }
+        nav li:hover {
+            opacity: .7;
+        }
+        .pre.after-loading {
+            left: -40px;
+            -webkit-transform: rotate(-45deg);
+            transform: rotate(-45deg);
+            border-top: 2px solid #fff;
+            border-left: 2px solid #fff;
+        }
+        .next.after-loading {
+            -webkit-transform: rotate(45deg);
+            transform: rotate(45deg);
+            border-top: 2px solid #fff;
+            border-right: 2px solid #fff;
+            right: -40px;
+        }
+        .style1 {
+            color: #FFFFFF
+        }
+        .style3 {
+            color: #000000;
+            font-weight: bold;
+        }
+        .style4 {
+            color: #FFFFFF;
+            font-weight: bold;
+        }
+        .style5 {
+            font-family: Georgia, "Times New Roman", Times, serif;
+            font-size: 12px;
+            color: #000000;
+        }
+        .style6 {
+            color: #000000;
+            font-family: Georgia, "Times New Roman", Times, serif;
+        }
+        .style7 {
+            color: #000000
+        }
+    </style>
+<script>
+    window.onload = function() {
+        var loading = document.getElementById("loading");
+        loading.classList.add("loading-done");
+        var property = {
+            element: "#images",
+            parallax: .6,
+            interval: 2200,
+            animDuration: 1300,
+            easing: easingInOutQuad
+        }
+        var slider = new DXslider(property);
+        slider.init();
+    }
+    class DXslider {
+        constructor(property) {
+            this.images = document.querySelector(property.element);
+            this.preButton = document.querySelector(property.element + " nav .pre");
+            this.nextButton = document.querySelector(property.element + " nav .next");
+            this.lightenImages = document.querySelectorAll(".lighten img");
+            this.normalImages = document.querySelectorAll(".normal img");
+            this.canvasBox = document.createElement("div");
+            this.paraEffect = property.parallax; //have to clamp 0 ~ 1
+            this.canvasArray = [];
+            this.progress = 0;
+            this.animating = false;
+            this.interval = property.interval;
+            this.left = true;
+            this.duration = property.animDuration;
+            this.easing = property.easing;
+            this.images.appendChild(this.canvasBox);
+            this.canvasBox.classList.add("canvas");
+        }
+        init() {
+            this.settingStyle();
+            this.settingCanvas();
+            this.preButton.addEventListener("click", function(e) {
+                if (!this.animating) {
+                    this.left = false;
+                    clearTimeout(this.timer);
+                    this.slide();
+                }
+            }.bind(this), false);
+            this.preButton.addEventListener("touchend", function(e) {
+                if (!this.animating) {
+                    this.left = false;
+                    clearTimeout(this.timer);
+                    this.slide();
+                }
+            }.bind(this), false);
+            this.nextButton.addEventListener("click", function(e) {
+                if (!this.animating) {
+                    this.left = true;
+                    clearTimeout(this.timer);
+                    this.slide();
+                }
+            }.bind(this), false);
+            this.nextButton.addEventListener("touchend", function(e) {
+                if (!this.animating) {
+                    this.left = true;
+                    clearTimeout(this.timer);
+                    this.slide();
+                }
+            }.bind(this), false);
+        }
+        settingStyle() {
+            this.imagesWidth = this.images.offsetWidth;
+            this.width = this.lightenImages[0].width;
+            this.height = this.lightenImages[0].height;
+            this.dpi = this.width / this.imagesWidth;
+            this.images.style.height = this.canvasBox.style.height = this.imagesWidth * this.height / this.width + "px";
+            this.preButton.classList.add("after-loading");
+            this.nextButton.classList.add("after-loading");
+        }
+        settingCanvas() {
+            var canvas, context, normal, lighten, n;
+            for (var i = 0, len = this.normalImages.length * 2; i < len; i++) {
+                canvas = document.createElement("canvas");
+                this.canvasBox.appendChild(canvas);
+                context = canvas.getContext("2d");
+                canvas.width = this.width;
+                canvas.height = this.height;
+                canvas.style.width = this.imagesWidth + "px";
+                canvas.style.height = this.imagesWidth * this.height / this.width + "px";
+                n = i % (len / 2);
+                normal = this.normalImages[n];
+                lighten = this.lightenImages[n];
+                this.canvasArray.push({
+                    canvas: canvas,
+                    context: context,
+                    normal: normal,
+                    lighten: lighten
+                });
+            }
+            this.render(this.progress, -this.imagesWidth);
+            this.timer = setTimeout(this.slide.bind(this), this.interval);
+        }
+        slide() {
+            this.left ?
+                this.tween(-this.imagesWidth, this.duration, this.easing) :
+                this.tween(this.imagesWidth, this.duration, this.easing);
+        }
+        tween(change, duration, easingFunc) {
+            var startTime = new Date();
+            this.progress = 0;
+            this.animating = true;
+            this.update(startTime, change, duration, easingFunc);
+        }
+        update(startTime, change, duration, easingFunc) {
+            var time = new Date() - startTime;
+            if (time < duration) {
+                this.progress = easingFunc(time / duration);
+                this.render(this.progress, change);
+                requestAnimationFrame(this.update.bind(this, startTime, change, duration, easingFunc));
+            } else {
+                if (this.left) {
+                    var firstEle = this.canvasArray[0];
+                    this.canvasArray.shift();
+                    this.canvasArray.push(firstEle);
+                } else {
+                    var lastEle = this.canvasArray[this.canvasArray.length - 1];
+                    this.canvasArray.pop();
+                    this.canvasArray.unshift(lastEle);
+                }
+                this.progress = 1;
+                this.animating = false;
+                time = duration;
+                this.left = true;
+                this.render(0, -this.imagesWidth);
+                this.timer = setTimeout(this.slide.bind(this), this.interval);
+            }
+        }
+        render(progress, position) {
+            for (var i = 0, len = this.canvasArray.length; i < len; i++) {
+                var canvas = this.canvasArray[i].canvas;
+                canvas.style.setProperty("-webkit-transform", "translate(" + (progress * position - (len / 2 - i) * this.imagesWidth) + "px, 0)");
+                canvas.style.transform = "translate(" + (progress * position - (len / 2 - i) * this.imagesWidth) + "px, 0)";
+                var context = this.canvasArray[i].context;
+                context.clearRect(0, 0, this.width, this.height);
+                context.globalCompositeOperation = "source-over";
+                context.drawImage(this.canvasArray[i].normal, 0, 0, this.width, this.height);
+                context.globalCompositeOperation = "lighten";
+                context.drawImage(this.canvasArray[i].lighten, ((len / 2 - i) * this.imagesWidth - progress * position) * this.dpi * this.paraEffect, 0, this.width, this.height);
+            }
+        }
+    }
+    function easingInOutQuad(t) {
+        return t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
+    }
+</script>
+</head>
+<body>
+    <div align="center">
+        <table width="1295" height="1058" border="0" bordercolor="#FFFFFF" bgcolor="#333333">
+             <tr>
+                <td width="1289" height="167" background="C:\Users\ic\Desktop\FA19-BCS-026\bootstrap-Examples\Img\bannerbg5.png" class="style1">
+                <img src="C:\Users\ic\Desktop\FA19-BCS-026\bootstrap-Examples\Img\logo.png" width="160" height="145" /></td>
+            </tr>
+            <tr>
+                <td>
+                    <ul>
+                       <li><a class="active" href="C:\Users\ic\Desktop\FA19-BCS-026\bootstrap-Examples\Index.html">Home</a></li>
+                        <li><a href="C:\Users\ic\Desktop\FA19-BCS-026\bootstrap-Examples\Vision.html">Vision & Mission</a></li>
+                        <li><a href="C:\Users\ic\Desktop\FA19-BCS-026\bootstrap-Examples\History.html">History</a></li>
+                        <li><a href="C:\Users\ic\Desktop\FA19-BCS-026\bootstrap-Examples\Member.html">Membership</a></li>
+                        <li><a href="C:\Users\ic\Desktop\FA19-BCS-026\bootstrap-Examples\Cabinet.html">Cabinet/Core Committee</a></li>
+                        <li><a href="C:\Users\ic\Desktop\FA19-BCS-026\bootstrap-Examples\Social.html">Social Media</a></li>
+                        <li><a href="C:\Users\ic\Desktop\FA19-BCS-026\bootstrap-Examples\Downloads.html">Downloads</a></li>
+                        <li><a href="C:\Users\ic\Desktop\FA19-BCS-026\bootstrap-Examples\Supportus.html">Support Us</a></li>
+                        <li><a href="C:\Users\ic\Desktop\FA19-BCS-026\bootstrap-Examples\News.html">News</a></li>
+                        <li><a href="C:\Users\ic\Desktop\FA19-BCS-026\bootstrap-Examples\Contact.html">Contact Us</a></li>
+                        <li><a href="Other/login.php">Admin Login</a></li>
+                    </ul>
+                </td>
+            </tr>
+            <tr>
+                <td height="280" valign="top" bgcolor="#000000">                    
+                    <div id="images">
+                        <div class="lighten">
+                            <img src="C:\Users\ic\Desktop\FA19-BCS-026\bootstrap-Examples\Img\1.jpg" alt="" />
+                            <img src="C:\Users\ic\Desktop\FA19-BCS-026\bootstrap-Examples\Img\2.jpg" alt="" />
+                            <img src="C:\Users\ic\Desktop\FA19-BCS-026\bootstrap-Examples\Img\3.jpg" alt="" />
+                            <img src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/593507/lighten4.jpg" alt="" /> </div>
+                        <div class="normal">
+                            <img src="C:\Users\ic\Desktop\FA19-BCS-026\bootstrap-Examples\Img\1.jpg" alt="" />
+                            <img src="C:\Users\ic\Desktop\FA19-BCS-026\bootstrap-Examples\Img\2.jpg" alt="" />
+                            <img src="C:\Users\ic\Desktop\FA19-BCS-026\bootstrap-Examples\Img\3.jpg" alt="" /> </div>
+                        <nav>
+
+                            <ul>
+                                <li class="pre"></li>
+                                <li class="next"></li>
+                            </ul>
+                        </nav>
+                    </div>
+                    <br /><br /> </td>
+            </tr>
+             <tr>
+                <td height="531" valign="top" bgcolor="#FFFFFF">
+                    <table width="100%" height="413" border="0" align="left" bordercolor="#B0D379" bgcolor="#B0D379">
+                        <tr>
+                            <td width="436" bgcolor="#B0D379">&nbsp;</td>
+                            <td width="415" bgcolor="#B0D379"><strong>President Message </strong></td>
+                            <td width="426" height="21" bgcolor="#B0D379"><span class="style3">News &amp; Events </span></td>
+                        </tr>
+                        <tr>
+                            <td colspan="2" rowspan="3" valign="top" bgcolor="#FFFFFF">
+                                <table width="857" height="498" border="0">
+                                    <tr>
+                                        <td width="435" height="95" valign="top" bgcolor="#FFFFFF">
+                                            <div align="center">
+                                                <p><img src="C:\Users\ic\Desktop\FA19-BCS-026\bootstrap-Examples\Img\Dr sami ur rehman.gif" width="240" height="311" /></p>
+                                                <p><strong>President's APUBTA</strong></p>
+                                                <p>Dr. Sami ur Rehman </p>
+                                            </div>
+                                        </td>
+                                        <td width="412" valign="top">
+                                            <div align="justify">
+                                                <p class="style7" dir="ltr">BPS faculty constitutes a huge majority (i.e. over 88 percent) of entire faculty of HEIs. They are undoubtedly a huge contributor and major driver of day-to-day, cyclic and round the year activities. They
+                                                    are a highly qualified and experienced human resource pool, with PhDs/Post-Docs from US, Europe and other developed countries who are discharging academic, research, and administrative responsibilities,
+                                                    with zeal and zest.&nbsp;</p>
+                                                <p class="style7" dir="ltr">This is very unfortunate that BPS faculty is subjected to multi-faced discrimination. There are no justified rules regarding their service structure and experience-based promotion. They are doomed to lose
+                                                    their seniority due to time scaled and ante-date promotions of TTS Faculty. There is no performance-based incentives for them.&nbsp;</p>
+                                                <p class="style7" dir="ltr">&nbsp;APUBTA is country-wide representative forum- aims at working for BPS faculty to safeguard their legitimate rights by uprooting the discriminatory practices concerning promotion, salary, performance-based
+                                                    incentive, study leave, etc.
+
+                                                </p>
+                                                <p dir="ltr"><span class="style7"><span class="style7">I request the entire BPS faculty in public sector universities to support us in this struggle for restoring the respect and dignity of university teachers.</span></span>
+                                                    <span
+                                                        class="style6"></span><span class="style5">&nbsp;</span></p>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </td>
+                            <td height="128" bgcolor="#FFFFFF">
+                                <marquee direction="up" height="300" scrollamount="3">
+                                    <p><img src="C:\Users\ic\Desktop\FA19-BCS-026\bootstrap-Examples\Img\new!.gif" alt="1" width="61" height="67" /> 27/08/2021 <br>
+                                        <a href="https://drive.google.com/file/d/1Y3ZPqkPQHeyYLnFmuTYAkOG18-pyBwbn/view?usp=sharing"> APUBTA delegation met with Executive Director HEC </a> </p>
+                                    <p><img src="C:\Users\ic\Desktop\FA19-BCS-026\bootstrap-Examples\Img\new!.gif" alt="1" width="61" height="67" /> 16/08/2021 <br>
+                                        <a href="https://www.youtube.com/watch?v=BylTBGK9xac&t=11s"> City 41 Report on HEC's Double Standard for Promotion of Universities Faculty </a> </p>
+                                    <p><img src="C:\Users\ic\Desktop\FA19-BCS-026\bootstrap-Examples\Img\new!.gif" alt="1" width="61" height="67" /> 09/07/2021 <br>
+                                        <a href="https://drive.google.com/file/d/1Otg110cYoQu2KJ14vJ-xg5pPUy2fvyij/view?usp=sharing"> APUBTA delegation met with Executive Director HEC </a> </p>
+                                    <p><img src="C:\Users\ic\Desktop\FA19-BCS-026\bootstrap-Examples\Img\new!.gif" alt="1" width="61" height="67" /> 21/01/2021 <br>
+                                        <a href="https://drive.google.com/file/d/14d19ryQdTplUJVfMkY84PNp7mxBc5GgD/view?usp=sharing"> APUBTA delegation met with HEC officials </a> </p>
+                                    <p><img src="C:\Users\ic\Desktop\FA19-BCS-026\bootstrap-Examples\Img\new!.gif" alt="1" width="61" height="67" /> 07/01/2021 <br>
+                                        <a href="https://www.youtube.com/watch?v=HGgd21764zA&t=534s"> APUBTA president interview on VOA (Pashto service) </a> </p>
+                                    <br />
+                                    <p><img src="C:\Users\ic\Desktop\FA19-BCS-026\bootstrap-Examples\Img\new!.gif" alt="1" width="61" height="67" /> 30/12/2020
+                                        <br> APUBTA finalized BPS draft statutes and is submitted to HEC</p>
+                                    <p><img src="C:\Users\ic\Desktop\FA19-BCS-026\bootstrap-Examples\Img\new!.gif" alt="1" width="61" height="67" /> 25/12/2020
+                                        <br> Data about Post PhD Experience for BPS Appointment &nbsp; has been forwarded to HEC</p>
+                                    <br/>
+                                    <p><img src="C:\Users\ic\Desktop\FA19-BCS-026\bootstrap-Examples\Img\new!.gif" alt="1" width="61" height="67" /> 20/10/2020 <br>
+                                        <a href="https://www.hec.gov.pk/english/news/news/Pages/BPS-Faculty-Delegation.aspx"> APUBTA delegation met with Chairman HEC </a> </p>
+                                    <br />
+                                    <p><img src="C:\Users\ic\Desktop\FA19-BCS-026\bootstrap-Examples\Img\new!.gif" alt="1" width="61" height="67" /> 18/09/2020 <br> APUBTA delegation met with Exectutive Director HEC Fateh Marri </p>
+                                    <br>
+                                    <p><img src="C:\Users\ic\Desktop\FA19-BCS-026\bootstrap-Examples\Img\new!.gif" alt="1" width="61" height="67" /> 02/09/2020 <br> APUBTA delegation met with Advisor to CM (KP) on Higher Education Mr. Khaleeq ur Rahman </p>
+                                    <br>
+                                    <p><img src="C:\Users\ic\Desktop\FA19-BCS-026\bootstrap-Examples\Img\new!.gif" alt="1" width="61" height="67" /> 30/06/2020 <br> APUBTA Core Committee is constitued </p>
+                                    <br>
+                                    <p><img src="C:\Users\ic\Desktop\FA19-BCS-026\bootstrap-Examples\Img\new!.gif" alt="1" width="61" height="67" /> 08/06/2020 <br> APUBTA General Body Meeting: Dr. Sami ur Rahman and Dr. Hidayat Ullah Khan were nominated as President and General Secretary respectively
+                                        for the interim period. </p>
+                                    <br>
+                                    <p>&nbsp; </p>
+                                </marquee>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+            <tr>
+                <td height="21" bgcolor="#333333">
+                    <div align="center" class="style4">@Copyright 2021 All Right Reserved By All Pakistan Universities BPS Teacher Association(APUBTA)</div>
+                </td>
+            </tr>
+        </table>
+    </div>
+</body>
+</html>
+
+</html>
